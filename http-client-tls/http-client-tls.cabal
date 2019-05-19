@@ -32,6 +32,7 @@ library
                      , containers
                      , text
                      , network-uri
+                     , socks >= 0.6.0
   default-language:    Haskell2010
   ghc-options:         -Wall
 
