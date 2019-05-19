@@ -32,8 +32,10 @@ import Network.HTTP.Client.Internal hiding (host, port)
 import Control.Exception
 import qualified Network.Connection as NC
 import Network.Socket (HostAddress)
+import Network.Socks5 (SocksAuthUsername(..))
 import qualified Network.TLS as TLS
 import qualified Data.ByteString as S
+import qualified Data.ByteString.Char8 as SC
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -239,7 +241,12 @@ parseSocksSettings env lenv n = do
                   _ -> Nothing
           _ -> Nothing
 
-  Just $ NC.SockSettingsSimple (U.uriRegName auth) port'
+  case U.uriUserInfo auth of
+      "" -> Just $ NC.SockSettingsSimple (U.uriRegName auth) port'
+      s  -> Just $ NC.SockSettingsAuth   (U.uriRegName auth) port' sAuth
+        where
+            sAuth = SocksAuthUsername (SC.pack sUsername) (SC.pack sPassword)
+            (sUsername, sPassword) = break (== ':') s
 
 -- | Evil global manager, to make life easier for the common use case
 globalManager :: IORef Manager
